@@ -15,16 +15,22 @@ class Mod(BaseModel):
     configFiles: list[ConfigFile]
 
 # Enum class that is representing the modpack build target (client or server)
-# TODO: Verify if the serialization/deserialization provided by pydantic is able to handle enum int->str str->int conversion
-class ModPackTarget(Enum):
-    CLIENT = 0
-    SERVER = 1
+class ModPackTarget(str, Enum):
+    CLIENT = 'client'
+    SERVER = 'server'
+
+# Class that is representing a collection of mods for a specific modding-API/game version
+class ModPackVersion(BaseModel):
+    mods: list[Mod]
 
 # Class that is representig the properties of the mod pack and is containing a list of mods for all specified modpack versions
 class ModPack(BaseModel):
     name: str
     buildName: str
     buildTarget: ModPackTarget
-    buildVersions: dict[str, list[Mod]]
+    buildVersions: dict[str, ModPackVersion]
 
-__all__ = [ 'Mod', 'ConfigFile', 'ModPackTarget', 'ModPack' ] 
+    class Config:
+        use_enum_values = True
+
+__all__ = [ 'ConfigFile', 'Mod', 'ModPackTarget', 'ModPackVersion', 'ModPack' ] 
