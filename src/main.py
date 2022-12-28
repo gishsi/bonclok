@@ -21,5 +21,4 @@ if __name__ == "__main__":
     parser = create_argument_parser()
     args = parser.parse_args()
     
-    print("Hello world!")
     exit(0)
