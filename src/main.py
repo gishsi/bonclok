@@ -1,9 +1,24 @@
-print("Hello world!")
+import argparse
 
+def create_argument_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument('-m', '--modpack',
+        action='store',
+        dest='modpackFilePath',
+        required=True,
+        help='The path to the mod pack configuration JSON file.')
 
-def hello_world():
-    return "Hello world!"
+    parser.add_argument('-v', '--verbose',
+        action='store_true',
+        dest='verboseMode',
+        required=False,
+        help='Log more details about the modpack building process.')
 
+    return parser
 
-def one():
-    return 1
+if __name__ == "__main__":
+    parser = create_argument_parser()
+    args = parser.parse_args()
+    
+    exit(0)
