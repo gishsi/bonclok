@@ -7,6 +7,8 @@
             "mods": [
                 {
                     "name": "Mod name",
+                    "includeClient": true,
+                    "includeServer": true,
                     "resourceUrl": "https://some.download.server.xyz/compiled",
                     "sourceUrl": "https://some.download.server.xyz/source",
                     "configFiles": [

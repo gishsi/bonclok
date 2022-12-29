@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import requests
 from pathlib import Path
 
-from models import ModPack
+from models import ModPack, ModpackTarget
 
 HTTP_HEADERS: OrderedDict = OrderedDict({
     "Accept-Encoding": "gzip, deflate, br",
@@ -86,6 +86,14 @@ class ModpackBuilder:
 
         buildVersion = self.modpackData.buildVersions[self.options.buildVersion]
         for mod in buildVersion.mods:
+            if self.modpackData.buildTarget == ModpackTarget.CLIENT and not mod.includeClient:
+                logging.debug("Mod skipped due to the modpack specification.")
+                continue
+
+            if self.modpackData.buildTarget == ModpackTarget.SERVER and not mod.includeServer:
+                logging.debug("Mod skipped due to the modpack specification.")
+                continue
+
             logging.info("Preparing resource: %s".format(mod.name))
 
             logging.info("Starting to download remote resource.")

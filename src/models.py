@@ -12,6 +12,8 @@ class Mod(BaseModel):
     checksum: str
     resourceUrl: str
     sourceUrl: str
+    includeClient: bool
+    includeServer: bool
     configFiles: list[ConfigFile]
 
 # Enum class that is representing the modpack build target (client or server)
