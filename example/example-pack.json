@@ -1,0 +1,23 @@
+{
+    "name": "Our cool modpack",
+    "buildName": "our-cool-modpack",
+    "buildTarget": "client",
+    "buildVersions": {
+        "1.12.2": {
+            "mods": [
+                {
+                    "name": "Mod name",
+                    "resourceUrl": "https://some.download.server.xyz/compiled",
+                    "sourceUrl": "https://some.download.server.xyz/source",
+                    "configFiles": [
+                        {
+                            "sourcePath": "localconfig/optifine-config.yaml",
+                            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+                        }
+                    ],
+                    "checksum": ""
+                }
+            ]
+        }
+    }
+}
