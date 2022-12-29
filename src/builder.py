@@ -38,7 +38,8 @@ def parse_mod_file_name(name: str, version:str, resourceUrl: str) -> str:
     if fileNamePart.lower().endswith('.jar'):
         return fileNamePart
 
-    return "%s-%s.jar".format(name.lower(), version.lower())
+    escapedVersion = version.lower().replace('.', '-')
+    return "%s-%s.jar".format(name.lower(), escapedVersion)
 
 # Helper function used to calculate the SHA-256 checksum from the remote resource and return the haxadecimal representation of the hash
 def calculate_resource_checksum(resource: bytes) -> str:
