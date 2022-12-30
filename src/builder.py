@@ -1,11 +1,11 @@
 from collections import OrderedDict
 import hashlib
 import json
-import logging
 import os
 from urllib.parse import urlparse
 import requests
 from pathlib import Path
+from logger import Logger
 
 from models import Modpack, ModpackTarget
 
@@ -49,79 +49,95 @@ def calculate_resource_checksum(resource: bytes) -> str:
 
 # Class used to parse and perform all the modpack build instructions required to obtain a read-to-use pack of mods
 class ModpackBuilder:
-    def __init__(self, modpackFilePath: str, options: ModpackBuilderOptions):
+    def __init__(self, modpackFilePath: str, options: ModpackBuilderOptions, logger: Logger):
+        if logger == None:
+            raise ModpackBuilderException("The provided logger instance is not initialzied.")
+        
+        self.logger = logger
+
         if modpackFilePath == None or len(modpackFilePath) == 0:
-            logging.debug("Invalid modpack file path provided.")
             raise ModpackBuilderException("Invalid modpack file path provided.")
 
         if options == None:
-            logging.debug("Invalid modpack builder options provided.")
             raise ModpackBuilderException("Invalid modpack builder options provided.")
         
         self.options = options
 
         with open(modpackFilePath, "r") as modpackFile:
+            self.logger.log_verbose("Modpack config file opened.")
+
             modpackFileContent = modpackFile.read()
             if len(modpackFileContent) == 0:
-                logging.debug("The modpack file can not be accessed or is corrupted.")
+                self.logger.log_verbose("The length of the modpack file content is zero.")
                 raise ModpackBuilderException("The modpack file can not be accessed or is corrupted.")
 
             modpackContentDictionary = json.loads(modpackFileContent)
+            self.logger.log_verbose("Modpack config file content JSON parsed successful.")
+
             self.modpackData = Modpack(**modpackContentDictionary)
+            self.logger.log_verbose("Modpack config file content deserialzied successful.")
         
-        logging.info("Parsing of the modpack file succeeded.")
+        self.logger.log_success("Parsing of the modpack file succeeded.")
         
     # Start the interpretation process of the parsed mod pack instruction file    
     def build(self) -> None:
         if not self.options.buildVersion in self.modpackData.buildVersions:
-            logging.debug("The provided build version is not described in the parsed modpack file.")
+            self.logger.log_verbose("The provided build version: {} is not described in the parsed modpack file.".format(self.options.buildVersion))
             raise ModpackBuilderException("The provided build version is not described in the parsed modpack file.")
         
         buildDirectory = "{}-{}-build".format(self.modpackData.buildName, self.options.buildVersion)
         if os.path.isdir(buildDirectory):
-            logging.debug("The build directory already exists. The previous build may be corrupted.")
+            self.logger.log_verbose("The build directory: {} already exists. The previous build may be corrupted.".format(buildDirectory))
             raise ModpackBuilderException("The build directory already exists. The previous build may be corrupted.")
 
-        logging.debug("Build directory created.")
+        self.logger.log_verbose("Creating build directory.")
         os.mkdir(buildDirectory)
+        self.logger.log_verbose("Build directory created.")
 
         buildVersion = self.modpackData.buildVersions[self.options.buildVersion]
         for mod in buildVersion.mods:
+            modLoggingPrefix = "({})".format(mod.name.strip())
+
             if self.modpackData.buildTarget == ModpackTarget.CLIENT and not mod.includeClient:
-                logging.debug("Mod skipped due to the modpack specification.")
+                self.logger.log_verbose("{} Skipping the mod. Current build target is CLIENT and the mod has been flagged for exclusion from the CLIENT.".format(modLoggingPrefix))
                 continue
 
             if self.modpackData.buildTarget == ModpackTarget.SERVER and not mod.includeServer:
-                logging.debug("Mod skipped due to the modpack specification.")
+                self.logger.log_verbose("{} Skipping the mod. Current build target is SERVER and the mod has been flagged for exclusion from the SERVER.".format(modLoggingPrefix))
                 continue
 
-            logging.info("Preparing resource: {}".format(mod.name))
-
-            logging.info("Starting to download remote resource.")
+            self.logger.log_verbose("{} Starting to download the remote mod resource.".format(modLoggingPrefix))
             resourceResult = requests.get(mod.resourceUrl, headers=HTTP_HEADERS)
             if resourceResult.status_code != 200:
-                logging.debug("The requested resource returned a non-2** status code.")
+                self.logger.log_verbose("{} The request returned a: {} status code.".format(modLoggingPrefix, resourceResult.status_code))
                 raise ModpackBuilderException("The requested resource returned a non-2** status code.")
 
-            logging.info("Remote resource downloaded successful.")
+            self.logger.log_verbose("{} Remote mod resource downloaded successful.".format(modLoggingPrefix))
+            
+            if self.options.skipChecksum:
+                self.logger.log_verbose("{} Checksum verification skipped due to the builder options.".format(modLoggingPrefix))
+            else:
+                self.logger.log_verbose("{} Starting checksum verification.".format(modLoggingPrefix))
 
-            if not self.options.skipChecksum:
                 calculatedChecksum = calculate_resource_checksum(resourceResult.content)
                 if calculatedChecksum != mod.checksum:
-                    logging.debug("The expected and calculated checksums are not matching.")
+                    self.logger.log_verbose("{} The expected and calculated checksums are not matching.".format(modLoggingPrefix))
                     raise ModpackBuilderException("The expected and calculated checksums are not matching.")
+                else:
+                    self.logger.log_verbose("{} Checksums are matching. Verification succeed.".format(modLoggingPrefix))
 
+            self.logger.log_verbose("{} Preparing mod resource file name and path.".format(modLoggingPrefix))
             modFileName = parse_mod_file_name(mod.name, self.options.buildVersion, mod.resourceUrl)
             modFilePath = os.path.join(buildDirectory, modFileName)
             
-            logging.info("Creating local mod file.")
+            self.logger.log_verbose("{} Preparing mod resource file.".format(modLoggingPrefix))
             with open(modFilePath, 'wb') as modFile:
+                self.logger.log_verbose("{} Writing downloaded mod resource content to file.".format(modLoggingPrefix))
                 modFile.write(resourceResult.content)
 
-            logging.info("Local mod file created successful.")
+            self.logger.log_success("Mod resource: {} downloaded successful.".format(mod.name.strip()))
 
-        
         # TODO: Implement .zip support 
-        logging.info("Modpack build process finished.")
+        self.logger.log_success("Modpack: {} ({}) build process finished.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
 
 __all__ = [ 'ModpackBuilderException', 'ModpackBuilderOptions', 'ModpackBuilder', 'InitializeNewModpack' ]
