@@ -2,6 +2,7 @@ from collections import OrderedDict
 import hashlib
 import json
 import os
+import shutil
 from urllib.parse import urlparse
 import requests
 from pathlib import Path
@@ -26,9 +27,10 @@ class ModpackBuilderException(Exception):
 
 # Class used to store builder options
 class ModpackBuilderOptions():
-    def __init__(self, buildVersion: str, skipChecksum: bool):
+    def __init__(self, buildVersion: str, skipChecksum: bool, forceBuild: bool):
         self.buildVersion = buildVersion
         self.skipChecksum = skipChecksum
+        self.forceBuild = forceBuild
 
 # Helper function used to extract the mod name from the url or alternatively combine it from other known mod properties
 def parse_mod_file_name(name: str, version:str, resourceUrl: str) -> str:
@@ -87,8 +89,14 @@ class ModpackBuilder:
         
         buildDirectory = "{}-{}-build".format(self.modpackData.buildName, self.options.buildVersion)
         if os.path.isdir(buildDirectory):
-            self.logger.log_verbose("The build directory: {} already exists. The previous build may be corrupted.".format(buildDirectory))
-            raise ModpackBuilderException("The build directory already exists. The previous build may be corrupted.")
+            if self.options.forceBuild:
+                self.logger.log_verbose("Force build flag is enabled, removing the existing build.")
+                
+                # TODO: Proper error handling for the shutil method
+                shutil.rmtree(buildDirectory)
+            else:
+                self.logger.log_verbose("The build directory: {} already exists. The previous build may be corrupted.".format(buildDirectory))
+                raise ModpackBuilderException("The build directory already exists. The previous build may be corrupted.")
 
         self.logger.log_verbose("Creating build directory.")
         os.mkdir(buildDirectory)
@@ -109,9 +117,13 @@ class ModpackBuilder:
             self.logger.log_verbose("{} Starting to download the remote mod resource.".format(modLoggingPrefix))
             resourceResult = requests.get(mod.resourceUrl, headers=HTTP_HEADERS)
             if resourceResult.status_code != 200:
-                self.logger.log_verbose("{} The request returned a: {} status code.".format(modLoggingPrefix, resourceResult.status_code))
-                raise ModpackBuilderException("The requested resource returned a non-2** status code.")
-
+                if self.options.forceBuild:
+                    self.logger.log_verbose("Force build flag is enabled, skipping operations on the current mod.")
+                    continue;
+                else:
+                    self.logger.log_verbose("{} The request returned a: {} status code.".format(modLoggingPrefix, resourceResult.status_code))
+                    raise ModpackBuilderException("The requested resource returned a non-2** status code.")
+                
             self.logger.log_verbose("{} Remote mod resource downloaded successful.".format(modLoggingPrefix))
             
             if self.options.skipChecksum:
