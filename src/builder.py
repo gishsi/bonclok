@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import requests
 from pathlib import Path
 
-from models import ModPack, ModpackTarget
+from models import Modpack, ModpackTarget
 
 HTTP_HEADERS: OrderedDict = OrderedDict({
     "Accept-Encoding": "gzip, deflate, br",
@@ -39,7 +39,8 @@ def parse_mod_file_name(name: str, version:str, resourceUrl: str) -> str:
         return fileNamePart
 
     escapedVersion = version.lower().replace('.', '-')
-    return "%s-%s.jar".format(name.lower(), escapedVersion)
+
+    return "{}-{}.jar".format(name.lower(), escapedVersion)
 
 # Helper function used to calculate the SHA-256 checksum from the remote resource and return the haxadecimal representation of the hash
 def calculate_resource_checksum(resource: bytes) -> str:
@@ -66,7 +67,7 @@ class ModpackBuilder:
                 raise ModpackBuilderException("The modpack file can not be accessed or is corrupted.")
 
             modpackContentDictionary = json.loads(modpackFileContent)
-            self.modpackData = ModPack(**modpackContentDictionary)
+            self.modpackData = Modpack(**modpackContentDictionary)
         
         logging.info("Parsing of the modpack file succeeded.")
         
@@ -76,7 +77,7 @@ class ModpackBuilder:
             logging.debug("The provided build version is not described in the parsed modpack file.")
             raise ModpackBuilderException("The provided build version is not described in the parsed modpack file.")
         
-        buildDirectory = "%s-%s-build".format(self.modpackData.buildName, self.options.buildVersion)
+        buildDirectory = "{}-{}-build".format(self.modpackData.buildName, self.options.buildVersion)
         if os.path.isdir(buildDirectory):
             logging.debug("The build directory already exists. The previous build may be corrupted.")
             raise ModpackBuilderException("The build directory already exists. The previous build may be corrupted.")
@@ -94,7 +95,7 @@ class ModpackBuilder:
                 logging.debug("Mod skipped due to the modpack specification.")
                 continue
 
-            logging.info("Preparing resource: %s".format(mod.name))
+            logging.info("Preparing resource: {}".format(mod.name))
 
             logging.info("Starting to download remote resource.")
             resourceResult = requests.get(mod.resourceUrl, headers=HTTP_HEADERS)

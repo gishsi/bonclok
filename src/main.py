@@ -58,7 +58,7 @@ if __name__ == "__main__":
     
     try:
         # TODO: Currently the builder is case-sensitive (Json props), this is the price of choosing Python...
-        builderOptions = ModpackBuilderOptions(skipChecksum=args.skipChecksum)
+        builderOptions = ModpackBuilderOptions(buildVersion=args.buildVersion, skipChecksum=args.skipChecksum)
         builder = ModpackBuilder(args.modpackFilePath, builderOptions)
         builder.build()
         
