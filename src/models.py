@@ -42,4 +42,4 @@ class Modpack(BaseModel):
     class Config:
         use_enum_values = True
 
-__all__ = [ 'ConfigFile', 'Mod', 'ModpackTarget', 'ModpackVersion', 'Modpack' ] 
+__all__ = [ 'ConfigFile', 'Mod', 'ModpackTarget', 'ModpackVersion', 'InstallationResource', 'Modpack' ] 
