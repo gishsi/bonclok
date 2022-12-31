@@ -99,7 +99,7 @@ class ModpackBuilder:
             self.logger.log_verbose("The provided build version: {} is not described in the parsed modpack file.".format(self.options.buildVersion))
             raise ModpackBuilderException("The provided build version is not described in the parsed modpack file.")
         
-        buildDirectory = "{}-{}-build".format(self.modpackData.buildName, self.options.buildVersion)
+        buildDirectory = "{}-{}-build".format(self.modpackData.name, self.options.buildVersion)
         if os.path.isdir(buildDirectory):
             if self.options.forceBuild:
                 self.logger.log_verbose("Force build flag is enabled, removing the existing build.")
