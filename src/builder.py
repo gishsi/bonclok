@@ -79,6 +79,7 @@ class ModpackBuilder:
 
         with open(modpackFilePath, "r") as modpackFile:
             self.logger.log_verbose("Modpack config file opened.")
+            self.modpackFilePath = modpackFilePath
 
             modpackFileContent = modpackFile.read()
             if len(modpackFileContent) == 0:
@@ -160,6 +161,28 @@ class ModpackBuilder:
                 modFile.write(resourceResult.content)
 
             self.logger.log_success("Mod resource: {} downloaded successful.".format(mod.name.strip()))
+
+            self.logger.log_verbose("{} Starting to copy mod resource config files.".format(modLoggingPrefix))
+            for configFile in mod.configFiles:
+                self.logger.log_verbose("{} Preparing source config file: {}.".format(modLoggingPrefix, configFile.sourcePath))
+                modpackConfigPath = str(Path(self.modpackFilePath).parent)          
+                fullSourcePath = Path(os.path.join(modpackConfigPath, configFile.sourcePath))
+                if not fullSourcePath.exists() and not fullSourcePath.is_file():
+                    if self.options.forceBuild:
+                        self.logger.log_verbose("{} The mod config source path does not exists bu the force flag is set. Skipping the config file.")
+                    else:
+                        raise ModpackBuilderException("The mod config file path does not exist.")
+
+                self.logger.log_verbose("{} Preparing destination config file: {}.".format(modLoggingPrefix, configFile.destinationPath))
+                destinationPath = Path(configFile.destinationPath)
+                fullDestinationPath = Path(os.path.join(buildDirectory, str(destinationPath.parent)))
+                fullDestinationPath.mkdir(parents=True, exist_ok=True)
+                fullDestinationFilePath = os.path.join(fullDestinationPath, destinationPath.name)
+
+                self.logger.log_verbose("{} Starting to copy the config file.".format(modLoggingPrefix))
+                # TODO: Proper error handling for the shutil method
+                shutil.copyfile(fullSourcePath, fullDestinationFilePath)
+                self.logger.log_verbose("{} Config file copied successfully.".format(modLoggingPrefix))
 
         self.logger.log_success("Modpack: {} ({}) build process finished.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
 
