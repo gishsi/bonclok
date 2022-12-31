@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 from urllib.parse import urlparse
+from zipfile import ZIP_DEFLATED, ZipFile
 import requests
 from pathlib import Path
 from logger import Logger
@@ -27,10 +28,11 @@ class ModpackBuilderException(Exception):
 
 # Class used to store builder options
 class ModpackBuilderOptions():
-    def __init__(self, buildVersion: str, skipChecksum: bool, forceBuild: bool):
+    def __init__(self, buildVersion: str, skipChecksum: bool, forceBuild: bool, packToZip: bool):
         self.buildVersion = buildVersion
         self.skipChecksum = skipChecksum
         self.forceBuild = forceBuild
+        self.packToZip = packToZip
 
 # Helper function used to extract the mod name from the url or alternatively combine it from other known mod properties
 def parse_mod_file_name(name: str, version:str, resourceUrl: str) -> str:
@@ -48,6 +50,16 @@ def parse_mod_file_name(name: str, version:str, resourceUrl: str) -> str:
 def calculate_resource_checksum(resource: bytes) -> str:
     sha256 = hashlib.sha256(resource)
     return sha256.hexdigest()
+
+# Helper function used to create a .zip archive out of a specified directory
+def put_directory_into_archive(buildDirectoryPath: str, zipFileName: str) -> None:
+    zipArchive = ZipFile(zipFileName, 'w', ZIP_DEFLATED) 
+    for dirName, _, files in os.walk(buildDirectoryPath):
+        zipArchive.write(dirName)
+        for fileName in files:
+            zipArchive.write(os.path.join(dirName, fileName))
+
+    zipArchive.close()
 
 # Class used to parse and perform all the modpack build instructions required to obtain a read-to-use pack of mods
 class ModpackBuilder:
@@ -149,7 +161,12 @@ class ModpackBuilder:
 
             self.logger.log_success("Mod resource: {} downloaded successful.".format(mod.name.strip()))
 
-        # TODO: Implement .zip support 
         self.logger.log_success("Modpack: {} ({}) build process finished.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
+
+        if self.options.packToZip:
+            self.logger.log_verbose("Starting to packing build directory to zip archive.")
+            archiveName = "{}.zip".format(buildDirectory)
+            put_directory_into_archive(buildDirectory, archiveName)
+            self.logger.log_verbose("Packing build directory to zip archive succeed.")
 
 __all__ = [ 'ModpackBuilderException', 'ModpackBuilderOptions', 'ModpackBuilder', 'InitializeNewModpack' ]

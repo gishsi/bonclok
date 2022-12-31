@@ -21,7 +21,6 @@ def create_argument_parser() -> argparse.ArgumentParser:
         required=True,
         help='The target modding API version.')
 
-    # TODO: We can use a flag to specify if we want to build to a directory or .zip file
     # TODO: We can use a flag to specify how to handle unavailable resources (crashing the build or skiping a given resource) 
 
     parser.add_argument('-f', '--force',
@@ -29,6 +28,12 @@ def create_argument_parser() -> argparse.ArgumentParser:
         dest='force',
         required=False,
         help='Force the modpack build despite existing builds and download failure.')
+
+    parser.add_argument('-z', '--zip',
+        action='store_true',
+        dest="packToZip",
+        required=False,
+        help='Pack the build folder into a .zip archive.')
 
     parser.add_argument('-v', '--verbose',
         action='store_true',
@@ -60,8 +65,9 @@ if __name__ == "__main__":
         builderOptions = ModpackBuilderOptions(
             buildVersion=args.buildVersion,
             skipChecksum=args.skipChecksum,
-            forceBuild=args.force)
-            
+            forceBuild=args.force,
+            packToZip=args.packToZip)
+
         builder = ModpackBuilder(args.modpackFilePath, builderOptions, logger)
         builder.build()
     
