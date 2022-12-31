@@ -20,5 +20,17 @@
                 }
             ]
         }
-    }
+    },
+    "installation": [
+        {
+            "sourcePath": "localconfig/optifine-config.yaml",
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ],
+    "devInstallation": [
+        {
+            "sourcePath": "localconfig/optifine-config.yaml",
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ]
 }
