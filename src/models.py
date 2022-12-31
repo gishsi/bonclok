@@ -28,7 +28,6 @@ class ModpackVersion(BaseModel):
 # Class that is representig the properties of the mod pack and contains a list of mods for all specified modpack versions
 class Modpack(BaseModel):
     name: str
-    buildName: str
     buildTarget: ModpackTarget
     buildVersions: dict[str, ModpackVersion]
 

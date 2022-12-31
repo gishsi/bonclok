@@ -161,3 +161,4 @@ cython_debug/
 
 # Bonclok build's
 *-build/
+*-build.zip
