@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 # Class that is representing the source and destination paths of a mod configuration file
-class ConfigFile(BaseModel):
+class ModConfigFile(BaseModel):
     sourcePath: str
     destinationPath: str
 
@@ -14,7 +14,7 @@ class Mod(BaseModel):
     sourceUrl: str
     includeClient: bool
     includeServer: bool
-    configFiles: list[ConfigFile]
+    configFiles: list[ModConfigFile]
 
 # Enum class that is representing the modpack build target (client or server)
 class ModpackTarget(str, Enum):
