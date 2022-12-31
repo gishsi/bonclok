@@ -96,6 +96,8 @@ class ModpackBuilder:
         
     # Start the interpretation process of the parsed mod pack instruction file    
     def build(self) -> None:
+        self.logger.log_success("Modpack: {} ({}) build process started.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
+
         if not self.options.buildVersion in self.modpackData.buildVersions:
             self.logger.log_verbose("The provided build version: {} is not described in the parsed modpack file.".format(self.options.buildVersion))
             raise ModpackBuilderException("The provided build version is not described in the parsed modpack file.")
@@ -191,5 +193,47 @@ class ModpackBuilder:
             archiveName = "{}.zip".format(buildDirectory)
             put_directory_into_archive(buildDirectory, archiveName)
             self.logger.log_verbose("Packing build directory to zip archive succeed.")
+
+    # Start the interpretation process of the parsed mod pack instruction file
+    def install(self, useDevInstructions: bool) -> None:
+        self.logger.log_success("Modpack: {} ({}) installation process started.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
+        
+        instructions = None
+        if useDevInstructions:
+            self.logger.log_verbose("Using the development installation rules.")
+            instructions = self.modpackData.devInstallation
+        else:
+            self.logger.log_verbose("Using the default installation rules.")
+            instructions = self.modpackData.installation
+        
+        if instructions == None:
+            raise ModpackBuilderException("The installation rules are not specified.")
+
+        for instruction in instructions:
+            sourcePath = Path(instruction.sourcePath)
+            if not sourcePath.exists():
+                raise ModpackBuilderException("The installation source file/directory path does not exist.")
+                        
+            # TODO: We can use various strategies for cp.
+            #
+            # 1. Copy the files only if the dir structure exists
+            # 2. Create the directory tree and cp files
+            # 3. Create the directory tree and remove old files and paste the new ones
+            
+            destinationPath = Path(instruction.destinationPath)
+            if sourcePath.is_file():
+                self.logger.log_verbose("Starting the installation of the file source: {}.".format(instruction.sourcePath))
+                # TODO: Proper error handling for the shutil method
+                shutil.copy(sourcePath, destinationPath)
+                self.logger.log_verbose("Installation of the file source: {} succeeded.".format(instruction.sourcePath))
+            elif sourcePath.is_dir():
+                self.logger.log_verbose("Starting the installation of the directory tree source: {}.".format(instruction.sourcePath))
+                # TODO: Proper error handling for the shutil method
+                shutil.copytree(sourcePath, destinationPath)
+                self.logger.log_verbose("Installation of the directory tree source: {} succeeded.".format(instruction.sourcePath))
+            else:
+                raise ModpackBuilderException("Can not determine the source type.")
+
+        self.logger.log_success("Modpack: {} ({}) installation process finished.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
 
 __all__ = [ 'ModpackBuilderException', 'ModpackBuilderOptions', 'ModpackBuilder', 'InitializeNewModpack' ]
