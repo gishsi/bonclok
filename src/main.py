@@ -47,6 +47,20 @@ def create_argument_parser() -> argparse.ArgumentParser:
         required=False,
         help='Skip the process of checking the mod file hash.')
 
+    # TODO: Specify target CLIENT/SERVER via flag instead of JSON field
+
+    parser.add_argument('-i', '--install',
+        action='store_true',
+        dest='install',
+        required=False,
+        help='Run the default installation process after the build.')
+
+    parser.add_argument('-d', '--dev-install',
+        action='store_true',
+        dest='devInstall',
+        required=False,
+        help='Run the development installation process after the build.')
+
     return parser
 
 if __name__ == "__main__":
@@ -71,6 +85,14 @@ if __name__ == "__main__":
         builder = ModpackBuilder(args.modpackFilePath, builderOptions, logger)
         builder.build()
     
+        if args.install:
+            builder.install(True)
+            exit(0)
+
+        if args.devInstall:
+            builder.install(False)
+            exit(0)
+
         exit(0)
     except ModpackBuilderException as ex:
         logger.log_error(ex)

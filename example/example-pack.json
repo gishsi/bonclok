@@ -22,5 +22,21 @@
                 }
             ]
         }
-    }
+    },
+    "installation": [
+        {
+            // The source path is relative to current directory (cwd)
+            "sourcePath": "localconfig/optifine-config.yaml",
+            // The destination path should be absolute
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ],
+    "devInstallation": [
+        {
+            // The source path is relative to current directory (cwd)
+            "sourcePath": "localconfig/optifine-config.yaml",
+            // The destination path should be absolute
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ]
 }

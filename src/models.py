@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 from pydantic import BaseModel
 
 # Class that is representing the source and destination paths of a mod configuration file
@@ -25,11 +26,18 @@ class ModpackTarget(str, Enum):
 class ModpackVersion(BaseModel):
     mods: list[Mod]
 
+# Class that is representing the source and destination paths of a build resource to install
+class InstallationResource(BaseModel):
+    sourcePath: str
+    destinationPath: str
+
 # Class that is representig the properties of the mod pack and contains a list of mods for all specified modpack versions
 class Modpack(BaseModel):
     name: str
     buildTarget: ModpackTarget
     buildVersions: dict[str, ModpackVersion]
+    installation: Optional[list[InstallationResource]]
+    devInstallation: Optional[list[InstallationResource]]
 
     class Config:
         use_enum_values = True
