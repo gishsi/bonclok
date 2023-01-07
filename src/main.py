@@ -1,7 +1,8 @@
 import argparse
-import logging
+import sys
 
-from builder import ModpackBuilder, ModpackBuilderOptions
+from builder import ModpackBuilder, ModpackBuilderException, ModpackBuilderOptions
+from logger import Logger, LoggerException
 
 # Helper function used to define all supported CLI flags and --help docs
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -20,8 +21,19 @@ def create_argument_parser() -> argparse.ArgumentParser:
         required=True,
         help='The target modding API version.')
 
-    # TODO: We can use a flag to specify if we want to build to a directory or .zip file
     # TODO: We can use a flag to specify how to handle unavailable resources (crashing the build or skiping a given resource) 
+
+    parser.add_argument('-f', '--force',
+        action='store_true',
+        dest='force',
+        required=False,
+        help='Force the modpack build despite existing builds and download failure.')
+
+    parser.add_argument('-z', '--zip',
+        action='store_true',
+        dest="packToZip",
+        required=False,
+        help='Pack the build folder into a .zip archive.')
 
     parser.add_argument('-v', '--verbose',
         action='store_true',
@@ -37,36 +49,32 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
     return parser
 
-# Helper function used to configure the behavior of the logging system
-def configure_logging(verboseMode: bool) -> None:
-    logLevel = logging.INFO
-    if verboseMode: logLevel = logging.DEBUG
-    
-    formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] - %(message)s')
-
-    handler = logging.StreamHandler()
-    handler.setLevel(logLevel)
-    handler.setFormatter(formatter)
-
-    logging.basicConfig(level=logLevel, force=True, handlers=[ handler ])
-
 if __name__ == "__main__":
-    parser = create_argument_parser()
-    args = parser.parse_args()
-    
-    configure_logging(args.verboseMode)
-    
+    logger = None
+
     try:
+        parser = create_argument_parser()
+        args = parser.parse_args()
+
+        try:
+            logger = Logger(sys.stdout, args.verboseMode)
+        except LoggerException:
+            exit(2)
+
         # TODO: Currently the builder is case-sensitive (Json props), this is the price of choosing Python...
-        builderOptions = ModpackBuilderOptions(skipChecksum=args.skipChecksum)
-        builder = ModpackBuilder(args.modpackFilePath, builderOptions)
+        builderOptions = ModpackBuilderOptions(
+            buildVersion=args.buildVersion,
+            skipChecksum=args.skipChecksum,
+            forceBuild=args.force,
+            packToZip=args.packToZip)
+
+        builder = ModpackBuilder(args.modpackFilePath, builderOptions, logger)
         builder.build()
-        
+    
         exit(0)
+    except ModpackBuilderException as ex:
+        logger.log_error(ex)
+        exit(1)
     except Exception as ex:
-        if hasattr(ex, 'message'):
-            logging.error(ex.message)
-        else:
-            logging.error(ex)
-        
+        logger.log_error(ex)
         exit(1)
