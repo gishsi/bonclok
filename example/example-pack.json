@@ -12,13 +12,31 @@
                     "sourceUrl": "https://some.download.server.xyz/source",
                     "configFiles": [
                         {
-                            "sourcePath": "localconfig/optifine-config.yaml",
-                            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+                            // The source path is relative to the modpack JSON file location
+                            "sourcePath": "local-directory/some-mod-directory/config.yaml",
+                            // The destination path is combined with the build path: xyz-build/som-mod-directory/config.yml
+                            "destinationPath": "some-mod-directory/config.yaml"
                         }
                     ],
                     "checksum": ""
                 }
             ]
         }
-    }
+    },
+    "installation": [
+        {
+            // The source path is relative to current directory (cwd)
+            "sourcePath": "localconfig/optifine-config.yaml",
+            // The destination path should be absolute
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ],
+    "devInstallation": [
+        {
+            // The source path is relative to current directory (cwd)
+            "sourcePath": "localconfig/optifine-config.yaml",
+            // The destination path should be absolute
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ]
 }
