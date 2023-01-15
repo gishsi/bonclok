@@ -14,15 +14,6 @@ def create_argument_parser() -> argparse.ArgumentParser:
         required=True,
         help='The path to the mod pack configuration JSON file.')
 
-    # TODO: We can use the latest version when this flag is not specified
-    parser.add_argument('-b', '--build-version',
-        action='store',
-        dest='buildVersion',
-        required=True,
-        help='The target modding API version.')
-
-    # TODO: We can use a flag to specify how to handle unavailable resources (crashing the build or skiping a given resource) 
-
     parser.add_argument('-f', '--force',
         action='store_true',
         dest='force',
@@ -82,7 +73,6 @@ if __name__ == "__main__":
 
         # TODO: Currently the builder is case-sensitive (Json props), this is the price of choosing Python...
         builderOptions = ModpackBuilderOptions(
-            buildVersion=args.buildVersion,
             skipChecksum=args.skipChecksum,
             forceBuild=args.force,
             packToZip=args.packToZip,

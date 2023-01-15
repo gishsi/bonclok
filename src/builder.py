@@ -28,8 +28,7 @@ class ModpackBuilderException(Exception):
 
 # Class used to store builder options
 class ModpackBuilderOptions():
-    def __init__(self, buildVersion: str, skipChecksum: bool, forceBuild: bool, packToZip: bool, buildTarget: str):
-        self.buildVersion = buildVersion
+    def __init__(self, skipChecksum: bool, forceBuild: bool, packToZip: bool, buildTarget: str):
         self.skipChecksum = skipChecksum
         self.forceBuild = forceBuild
         self.packToZip = packToZip
@@ -110,11 +109,7 @@ class ModpackBuilder:
     def build(self) -> None:
         self.logger.log_success("Modpack: {} ({}) build process started.".format(self.modpackData.name.strip(), self.buildTarget))
 
-        if not self.options.buildVersion in self.modpackData.buildVersions:
-            self.logger.log_verbose("The provided build version: {} is not described in the parsed modpack file.".format(self.options.buildVersion))
-            raise ModpackBuilderException("The provided build version is not described in the parsed modpack file.")
-        
-        buildDirectory = "{}-{}-{}-build".format(self.modpackData.name, self.options.buildVersion, self.buildTarget)
+        buildDirectory = "{}-{}-{}-build".format(self.modpackData.name, self.modpackData.version, self.buildTarget)
         if os.path.isdir(buildDirectory):
             if self.options.forceBuild:
                 self.logger.log_verbose("Force build flag is enabled, removing the existing build.")
@@ -137,8 +132,7 @@ class ModpackBuilder:
         else:
             self.logger.log_verbose("Build directory created.")
 
-        buildVersion = self.modpackData.buildVersions[self.options.buildVersion]
-        for mod in buildVersion.mods:
+        for mod in self.modpackData.mods:
             modLoggingPrefix = "({})".format(mod.name.strip())
 
             if self.buildTarget == ModpackTarget.CLIENT and not mod.includeClient:
@@ -174,7 +168,7 @@ class ModpackBuilder:
                     self.logger.log_verbose("{} Checksums are matching. Verification succeed.".format(modLoggingPrefix))
 
             self.logger.log_verbose("{} Preparing mod resource file name and path.".format(modLoggingPrefix))
-            modFileName = parse_mod_file_name(mod.name, self.options.buildVersion, mod.resourceUrl)
+            modFileName = parse_mod_file_name(mod.name, self.modpackData.version, mod.resourceUrl)
             modFilePath = os.path.join(buildDirectory, modFileName)
             
             self.logger.log_verbose("{} Preparing mod resource file.".format(modLoggingPrefix))
