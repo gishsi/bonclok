@@ -2,7 +2,6 @@ from collections import OrderedDict
 import hashlib
 import json
 import os
-import shutil
 from urllib.parse import urlparse
 from zipfile import ZIP_DEFLATED, ZipFile
 import requests
@@ -10,6 +9,7 @@ from pathlib import Path
 from logger import Logger
 
 from models import Modpack, ModpackTarget
+from file import copy_file, copy_file_tree, remove_file_tree, create_directory
 
 HTTP_HEADERS: OrderedDict = OrderedDict({
     "Accept-Encoding": "gzip, deflate, br",
@@ -119,15 +119,23 @@ class ModpackBuilder:
             if self.options.forceBuild:
                 self.logger.log_verbose("Force build flag is enabled, removing the existing build.")
                 
-                # TODO: Proper error handling for the shutil method
-                shutil.rmtree(buildDirectory)
+                self.logger.log_verbose("Removing the build directory tree.")
+                if not remove_file_tree(buildDirectory):
+                    self.logger.log_verbose("Failed to remove the build directory: {}.".format(buildDirectory))
+                    raise ModpackBuilderException("Failed to remove the build directory.")
+                else:
+                    self.logger.log_verbose("Build directory tree removed successful.")
+
             else:
                 self.logger.log_verbose("The build directory: {} already exists. The previous build may be corrupted.".format(buildDirectory))
                 raise ModpackBuilderException("The build directory already exists. The previous build may be corrupted.")
 
         self.logger.log_verbose("Creating build directory.")
-        os.mkdir(buildDirectory)
-        self.logger.log_verbose("Build directory created.")
+        if not create_directory(buildDirectory):
+            self.logger.log_verbose("Failed to create build directory: {}.".format(buildDirectory))
+            raise ModpackBuilderException("Failed to create build directory.")
+        else:
+            self.logger.log_verbose("Build directory created.")
 
         buildVersion = self.modpackData.buildVersions[self.options.buildVersion]
         for mod in buildVersion.mods:
@@ -194,10 +202,12 @@ class ModpackBuilder:
                 fullDestinationFilePath = os.path.join(fullDestinationPath, destinationPath.name)
 
                 self.logger.log_verbose("{} Starting to copy the config file.".format(modLoggingPrefix))
-                # TODO: Proper error handling for the shutil method
-                shutil.copyfile(fullSourcePath, fullDestinationFilePath)
-                self.logger.log_verbose("{} Config file copied successfully.".format(modLoggingPrefix))
-
+                if not copy_file(fullSourcePath, fullDestinationFilePath):
+                    self.logger.log_verbose("{} Failed to copy config file from: {} to: {}.".format(modLoggingPrefix, fullSourcePath, fullDestinationFilePath))
+                    raise ModpackBuilderException("Failed to copy config file.")
+                else:
+                    self.logger.log_verbose("{} Config file copied successfully.".format(modLoggingPrefix))
+                
         self.logger.log_success("Modpack: {} ({}) build process finished.".format(self.modpackData.name.strip(), self.buildTarget))
 
         if self.options.packToZip:
@@ -235,14 +245,18 @@ class ModpackBuilder:
             destinationPath = Path(instruction.destinationPath)
             if sourcePath.is_file():
                 self.logger.log_verbose("Starting the installation of the file source: {}.".format(instruction.sourcePath))
-                # TODO: Proper error handling for the shutil method
-                shutil.copy(sourcePath, destinationPath)
-                self.logger.log_verbose("Installation of the file source: {} succeeded.".format(instruction.sourcePath))
+                if not copy_file(sourcePath, destinationPath):
+                    self.logger.log_verbose("Installation of the file source: {} failed.".format(instruction.sourcePath))
+                    raise ModpackBuilderException("Installation of the file source failed.")
+                else:
+                   self.logger.log_verbose("Installation of the file source: {} succeeded.".format(instruction.sourcePath)) 
             elif sourcePath.is_dir():
                 self.logger.log_verbose("Starting the installation of the directory tree source: {}.".format(instruction.sourcePath))
-                # TODO: Proper error handling for the shutil method
-                shutil.copytree(sourcePath, destinationPath)
-                self.logger.log_verbose("Installation of the directory tree source: {} succeeded.".format(instruction.sourcePath))
+                if not copy_file_tree(sourcePath, destinationPath):    
+                    self.logger.log_verbose("Installation of the directory tree source: {} failed.".format(instruction.sourcePath))
+                    raise ModpackBuilderException("Installation of the directory tree source failed")
+                else:
+                    self.logger.log_verbose("Installation of the directory tree source: {} succeeded.".format(instruction.sourcePath))
             else:
                 raise ModpackBuilderException("Can not determine the source type.")
 
