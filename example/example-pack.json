@@ -1,6 +1,5 @@
 {
     "name": "Our cool modpack",
-    "buildTarget": "client",
     "buildVersions": {
         "1.12.2": {
             "mods": [

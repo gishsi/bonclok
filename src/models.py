@@ -34,7 +34,6 @@ class InstallationResource(BaseModel):
 # Class that is representig the properties of the mod pack and contains a list of mods for all specified modpack versions
 class Modpack(BaseModel):
     name: str
-    buildTarget: ModpackTarget
     buildVersions: dict[str, ModpackVersion]
     installation: Optional[list[InstallationResource]]
     devInstallation: Optional[list[InstallationResource]]

@@ -47,7 +47,12 @@ def create_argument_parser() -> argparse.ArgumentParser:
         required=False,
         help='Skip the process of checking the mod file hash.')
 
-    # TODO: Specify target CLIENT/SERVER via flag instead of JSON field
+    # TODO: We can set the "required" property to false and build both client and server when not specified
+    parser.add_argument('-t', '--build-target',
+        action='store',
+        dest='buildTarget',
+        required=True,
+        help='Specify the build target: CLIENT/SERVER.')
 
     parser.add_argument('-i', '--install',
         action='store_true',
@@ -80,7 +85,8 @@ if __name__ == "__main__":
             buildVersion=args.buildVersion,
             skipChecksum=args.skipChecksum,
             forceBuild=args.force,
-            packToZip=args.packToZip)
+            packToZip=args.packToZip,
+            buildTarget=args.buildTarget)
 
         builder = ModpackBuilder(args.modpackFilePath, builderOptions, logger)
         builder.build()

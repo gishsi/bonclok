@@ -28,11 +28,12 @@ class ModpackBuilderException(Exception):
 
 # Class used to store builder options
 class ModpackBuilderOptions():
-    def __init__(self, buildVersion: str, skipChecksum: bool, forceBuild: bool, packToZip: bool):
+    def __init__(self, buildVersion: str, skipChecksum: bool, forceBuild: bool, packToZip: bool, buildTarget: str):
         self.buildVersion = buildVersion
         self.skipChecksum = skipChecksum
         self.forceBuild = forceBuild
         self.packToZip = packToZip
+        self.buildTarget = buildTarget
 
 # Helper function used to extract the mod name from the url or alternatively combine it from other known mod properties
 def parse_mod_file_name(name: str, version:str, resourceUrl: str) -> str:
@@ -76,6 +77,17 @@ class ModpackBuilder:
             raise ModpackBuilderException("Invalid modpack builder options provided.")
         
         self.options = options
+        
+        formatedBuildTarget = options.buildTarget.strip().lower()
+        if (formatedBuildTarget == 'client'):
+            self.logger.log_verbose('Selected build target is: client.')
+            self.buildTarget = ModpackTarget.CLIENT
+        elif (formatedBuildTarget == 'server'):
+            self.logger.log_verbose('Selected build target is: server.')
+            self.buildTarget = ModpackTarget.SERVER
+        else:
+            self.logger.log_verbose("Invalid build target specified: {}.".format(options.buildTarget))
+            raise ModpackBuilderException("Invalid build target specified.")
 
         with open(modpackFilePath, "r") as modpackFile:
             self.logger.log_verbose("Modpack config file opened.")
@@ -96,13 +108,13 @@ class ModpackBuilder:
         
     # Start the interpretation process of the parsed mod pack instruction file    
     def build(self) -> None:
-        self.logger.log_success("Modpack: {} ({}) build process started.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
+        self.logger.log_success("Modpack: {} ({}) build process started.".format(self.modpackData.name.strip(), self.buildTarget))
 
         if not self.options.buildVersion in self.modpackData.buildVersions:
             self.logger.log_verbose("The provided build version: {} is not described in the parsed modpack file.".format(self.options.buildVersion))
             raise ModpackBuilderException("The provided build version is not described in the parsed modpack file.")
         
-        buildDirectory = "{}-{}-build".format(self.modpackData.name, self.options.buildVersion)
+        buildDirectory = "{}-{}-{}-build".format(self.modpackData.name, self.options.buildVersion, self.buildTarget)
         if os.path.isdir(buildDirectory):
             if self.options.forceBuild:
                 self.logger.log_verbose("Force build flag is enabled, removing the existing build.")
@@ -121,11 +133,11 @@ class ModpackBuilder:
         for mod in buildVersion.mods:
             modLoggingPrefix = "({})".format(mod.name.strip())
 
-            if self.modpackData.buildTarget == ModpackTarget.CLIENT and not mod.includeClient:
+            if self.buildTarget == ModpackTarget.CLIENT and not mod.includeClient:
                 self.logger.log_verbose("{} Skipping the mod. Current build target is CLIENT and the mod has been flagged for exclusion from the CLIENT.".format(modLoggingPrefix))
                 continue
 
-            if self.modpackData.buildTarget == ModpackTarget.SERVER and not mod.includeServer:
+            if self.buildTarget == ModpackTarget.SERVER and not mod.includeServer:
                 self.logger.log_verbose("{} Skipping the mod. Current build target is SERVER and the mod has been flagged for exclusion from the SERVER.".format(modLoggingPrefix))
                 continue
 
@@ -186,7 +198,7 @@ class ModpackBuilder:
                 shutil.copyfile(fullSourcePath, fullDestinationFilePath)
                 self.logger.log_verbose("{} Config file copied successfully.".format(modLoggingPrefix))
 
-        self.logger.log_success("Modpack: {} ({}) build process finished.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
+        self.logger.log_success("Modpack: {} ({}) build process finished.".format(self.modpackData.name.strip(), self.buildTarget))
 
         if self.options.packToZip:
             self.logger.log_verbose("Starting to packing build directory to zip archive.")
@@ -196,7 +208,7 @@ class ModpackBuilder:
 
     # Start the interpretation process of the parsed mod pack instruction file
     def install(self, useDevInstructions: bool) -> None:
-        self.logger.log_success("Modpack: {} ({}) installation process started.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
+        self.logger.log_success("Modpack: {} ({}) installation process started.".format(self.modpackData.name.strip(), self.buildTarget))
         
         instructions = None
         if useDevInstructions:
@@ -234,6 +246,6 @@ class ModpackBuilder:
             else:
                 raise ModpackBuilderException("Can not determine the source type.")
 
-        self.logger.log_success("Modpack: {} ({}) installation process finished.".format(self.modpackData.name.strip(), self.modpackData.buildTarget))
+        self.logger.log_success("Modpack: {} ({}) installation process finished.".format(self.modpackData.name.strip(), self.buildTarget))
 
 __all__ = [ 'ModpackBuilderException', 'ModpackBuilderOptions', 'ModpackBuilder', 'InitializeNewModpack' ]
