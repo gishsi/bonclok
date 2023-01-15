@@ -22,10 +22,6 @@ class ModpackTarget(str, Enum):
     CLIENT = 'client'
     SERVER = 'server'
 
-# Class that is representing a collection of mods for a specific modding-API/game version
-class ModpackVersion(BaseModel):
-    mods: list[Mod]
-
 # Class that is representing the source and destination paths of a build resource to install
 class InstallationResource(BaseModel):
     sourcePath: str
@@ -34,11 +30,12 @@ class InstallationResource(BaseModel):
 # Class that is representig the properties of the mod pack and contains a list of mods for all specified modpack versions
 class Modpack(BaseModel):
     name: str
-    buildVersions: dict[str, ModpackVersion]
+    version: str
+    mods: list[Mod]
     installation: Optional[list[InstallationResource]]
     devInstallation: Optional[list[InstallationResource]]
 
     class Config:
         use_enum_values = True
 
-__all__ = [ 'ConfigFile', 'Mod', 'ModpackTarget', 'ModpackVersion', 'InstallationResource', 'Modpack' ] 
+__all__ = [ 'ConfigFile', 'Mod', 'ModpackTarget', 'InstallationResource', 'Modpack' ] 
