@@ -35,7 +35,7 @@ class ModpackBuilderOptions():
         self.buildTarget = buildTarget
 
 # Helper function used to extract the mod name from the url or alternatively combine it from other known mod properties
-def parse_mod_file_name(name: str, version:str, resourceUrl: str) -> str:
+def parse_remote_resource_file_name(name: str, version: str, resourceUrl: str) -> str:
     urlPath = Path(urlparse(resourceUrl).path)
     fileNamePart = urlPath.name
 
@@ -132,6 +132,50 @@ class ModpackBuilder:
         else:
             self.logger.log_verbose("Build directory created.")
 
+        apiLoggingPrefix = "({})".format(self.modpackData.api.name.strip())
+
+        self.logger.log_verbose("{} Starting to download the remote modding api resource.".format(apiLoggingPrefix))
+        resourceResult = requests.get(self.modpackData.api.resourceUrl, headers=HTTP_HEADERS)
+        if resourceResult.status_code != 200:
+            if self.options.forceBuild:
+                self.logger.log_verbose("{} Force build flag is enabled, skipping operations on the modding api.".format(apiLoggingPrefix))
+            else:
+                self.logger.log_verbose("{} The request returned a: {} status code.".format(apiLoggingPrefix, resourceResult.status_code))
+                raise ModpackBuilderException("The requested resource returned a non-2** status code.")
+                
+        self.logger.log_verbose("{} Remote modding api resource downloaded successful.".format(apiLoggingPrefix))
+            
+        if self.options.skipChecksum:
+            self.logger.log_verbose("{} Checksum verification skipped due to the builder options.".format(apiLoggingPrefix))
+        else:
+            self.logger.log_verbose("{} Starting checksum verification.".format(apiLoggingPrefix))
+
+            calculatedChecksum = calculate_resource_checksum(resourceResult.content)
+            if calculatedChecksum != self.modpackData.api.checksum:
+                self.logger.log_verbose("{} The expected and calculated checksums are not matching.".format(apiLoggingPrefix))
+                raise ModpackBuilderException("The expected and calculated checksums are not matching.")
+            else:
+                self.logger.log_verbose("{} Checksums are matching. Verification succeed.".format(apiLoggingPrefix))
+
+        self.logger.log_verbose("{} Preparing modding api resource file name and path.".format(apiLoggingPrefix))
+        apiFileName = parse_remote_resource_file_name(self.modpackData.api.name, self.modpackData.version, self.modpackData.api.resourceUrl)
+        apiFilePath = os.path.join(buildDirectory, apiFileName)
+            
+        self.logger.log_verbose("{} Preparing modding api resource file.".format(apiLoggingPrefix))
+        with open(apiFilePath, 'wb') as apiFile:
+            self.logger.log_verbose("{} Writing downloaded modding api resource content to file.".format(apiLoggingPrefix))
+            apiFile.write(resourceResult.content)
+
+        self.logger.log_success("Modding api resource: {} downloaded successful.".format(self.modpackData.api.name.strip()))
+
+        self.logger.log_verbose("Creating mods directory.")
+        modsDirectory = os.path.join(buildDirectory, "mods")
+        if not create_directory(modsDirectory):
+            self.logger.log_verbose("Failed to create mods directory: {}.".format(modsDirectory))
+            raise ModpackBuilderException("Failed to create mods directory.")
+        else:
+            self.logger.log_verbose("Mods directory created.")
+
         for mod in self.modpackData.mods:
             modLoggingPrefix = "({})".format(mod.name.strip())
 
@@ -168,8 +212,8 @@ class ModpackBuilder:
                     self.logger.log_verbose("{} Checksums are matching. Verification succeed.".format(modLoggingPrefix))
 
             self.logger.log_verbose("{} Preparing mod resource file name and path.".format(modLoggingPrefix))
-            modFileName = parse_mod_file_name(mod.name, self.modpackData.version, mod.resourceUrl)
-            modFilePath = os.path.join(buildDirectory, modFileName)
+            modFileName = parse_remote_resource_file_name(mod.name, self.modpackData.version, mod.resourceUrl)
+            modFilePath = os.path.join(modsDirectory, modFileName)
             
             self.logger.log_verbose("{} Preparing mod resource file.".format(modLoggingPrefix))
             with open(modFilePath, 'wb') as modFile:

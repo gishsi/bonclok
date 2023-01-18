@@ -17,6 +17,13 @@ class Mod(BaseModel):
     includeServer: bool
     configFiles: list[ModConfigFile]
 
+# Class that is representing the properties of the target modding API
+class ModdingApi(BaseModel):
+    name: str
+    checksum: str
+    resourceUrl: str
+    sourceUrl: str
+
 # Enum class that is representing the modpack build target (client or server)
 class ModpackTarget(str, Enum):
     CLIENT = 'client'
@@ -31,6 +38,7 @@ class InstallationResource(BaseModel):
 class Modpack(BaseModel):
     name: str
     version: str
+    api: ModdingApi
     mods: list[Mod]
     installation: Optional[list[InstallationResource]]
     devInstallation: Optional[list[InstallationResource]]
@@ -38,4 +46,4 @@ class Modpack(BaseModel):
     class Config:
         use_enum_values = True
 
-__all__ = [ 'ConfigFile', 'Mod', 'ModpackTarget', 'InstallationResource', 'Modpack' ] 
+__all__ = [ 'ConfigFile', 'Mod', 'ModdingApi', 'ModpackTarget', 'InstallationResource', 'Modpack' ] 

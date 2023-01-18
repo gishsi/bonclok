@@ -1,6 +1,12 @@
 {
     "name": "Our cool modpack",
     "version": "1.12.2",
+    "api": {
+        "name": "modding-api-name-1.12.2-1.0.0",
+        "resourceUrl": "https://some.download.server.xyz/compiled",
+        "sourceUrl": "https://some.download.server.xyz/source",
+        "checksum": ""
+    },
     "mods": [
         {
             "name": "Mod name",
@@ -18,7 +24,7 @@
             ],
             "checksum": ""
         }
-    ]
+    ],
     "installation": [
         {
             // The source path is relative to current directory (cwd)
