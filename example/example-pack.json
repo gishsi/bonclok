@@ -1,24 +1,44 @@
 {
     "name": "Our cool modpack",
-    "buildTarget": "client",
-    "buildVersions": {
-        "1.12.2": {
-            "mods": [
+    "version": "1.12.2",
+    "api": {
+        "name": "modding-api-name-1.12.2-1.0.0",
+        "resourceUrl": "https://some.download.server.xyz/compiled",
+        "sourceUrl": "https://some.download.server.xyz/source",
+        "checksum": ""
+    },
+    "mods": [
+        {
+            "name": "Mod name",
+            "includeClient": true,
+            "includeServer": true,
+            "resourceUrl": "https://some.download.server.xyz/compiled",
+            "sourceUrl": "https://some.download.server.xyz/source",
+            "configFiles": [
                 {
-                    "name": "Mod name",
-                    "includeClient": true,
-                    "includeServer": true,
-                    "resourceUrl": "https://some.download.server.xyz/compiled",
-                    "sourceUrl": "https://some.download.server.xyz/source",
-                    "configFiles": [
-                        {
-                            "sourcePath": "localconfig/optifine-config.yaml",
-                            "destinationPath": "modpack-build-dir/optifine/config.yaml"
-                        }
-                    ],
-                    "checksum": ""
+                    // The source path is relative to the modpack JSON file location
+                    "sourcePath": "local-directory/some-mod-directory/config.yaml",
+                    // The destination path is combined with the build path: xyz-build/som-mod-directory/config.yml
+                    "destinationPath": "some-mod-directory/config.yaml"
                 }
-            ]
+            ],
+            "checksum": ""
         }
-    }
+    ],
+    "installation": [
+        {
+            // The source path is relative to current directory (cwd)
+            "sourcePath": "localconfig/optifine-config.yaml",
+            // The destination path should be absolute
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ],
+    "devInstallation": [
+        {
+            // The source path is relative to current directory (cwd)
+            "sourcePath": "localconfig/optifine-config.yaml",
+            // The destination path should be absolute
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ]
 }

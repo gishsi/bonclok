@@ -14,15 +14,6 @@ def create_argument_parser() -> argparse.ArgumentParser:
         required=True,
         help='The path to the mod pack configuration JSON file.')
 
-    # TODO: We can use the latest version when this flag is not specified
-    parser.add_argument('-b', '--build-version',
-        action='store',
-        dest='buildVersion',
-        required=True,
-        help='The target modding API version.')
-
-    # TODO: We can use a flag to specify how to handle unavailable resources (crashing the build or skiping a given resource) 
-
     parser.add_argument('-f', '--force',
         action='store_true',
         dest='force',
@@ -47,6 +38,25 @@ def create_argument_parser() -> argparse.ArgumentParser:
         required=False,
         help='Skip the process of checking the mod file hash.')
 
+    # TODO: We can set the "required" property to false and build both client and server when not specified
+    parser.add_argument('-t', '--build-target',
+        action='store',
+        dest='buildTarget',
+        required=True,
+        help='Specify the build target: CLIENT/SERVER.')
+
+    parser.add_argument('-i', '--install',
+        action='store_true',
+        dest='install',
+        required=False,
+        help='Run the default installation process after the build.')
+
+    parser.add_argument('-d', '--dev-install',
+        action='store_true',
+        dest='devInstall',
+        required=False,
+        help='Run the development installation process after the build.')
+
     return parser
 
 if __name__ == "__main__":
@@ -63,14 +73,22 @@ if __name__ == "__main__":
 
         # TODO: Currently the builder is case-sensitive (Json props), this is the price of choosing Python...
         builderOptions = ModpackBuilderOptions(
-            buildVersion=args.buildVersion,
             skipChecksum=args.skipChecksum,
             forceBuild=args.force,
-            packToZip=args.packToZip)
+            packToZip=args.packToZip,
+            buildTarget=args.buildTarget)
 
         builder = ModpackBuilder(args.modpackFilePath, builderOptions, logger)
         builder.build()
     
+        if args.install:
+            builder.install(True)
+            exit(0)
+
+        if args.devInstall:
+            builder.install(False)
+            exit(0)
+
         exit(0)
     except ModpackBuilderException as ex:
         logger.log_error(ex)
