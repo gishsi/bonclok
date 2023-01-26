@@ -34,7 +34,7 @@ When using bonclok we need to specify two required parameters: path to the modpa
 - `-d` `--dev-install` - Run the development installation process after the build.
 
 An example of the structure of the modpack JSON configuration file:
-```json
+```jsonc
 {
     "name": "Our modpack name",
     "version": "1.16.5",
