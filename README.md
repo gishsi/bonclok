@@ -1,5 +1,5 @@
 # Bonclok
-Bonclok (*in the Silesian dialect means a cauldron or a large pot*) is a tool that allows you to automate the process of preparing mods and their configuration files for Minecraft in order to create your dream mod pack. Attention! Remember that the priority is to comply with the rules and licenses of the mods used. If you want to put a mod in your own pack, make sure there is a record that allows it. You can only automate mod downloads from services that allow it. Downloading from your own servers is recommended.
+Bonclok (*cauldron or a large pot in the Silesian dialect*) is a tool that allows you to automate the process of preparing Minecraft mods and their configuration files in order to create your dream mod pack. Attention! Remember that the priority is to comply with the rules and licenses of the mods used. If you want to put a mod in your own pack, make sure there is a record that allows it. You can only automate mod downloads from services that allow it. Downloading from your own servers is recommended.
 
 ## Installation
 Requirements:
@@ -53,7 +53,9 @@ An example of the structure of the modpack JSON configuration file:
             "sourceUrl": "https://example-mod.bonclok/source",
             "configFiles": [
                 {
+                    // The source path is relative to the modpack JSON file location
                     "sourcePath": "all-my-configs/example-mod/config.yaml",
+                    // The destination path is combined with the build path: <build-directory>/config/example-mod-config.yaml
                     "destinationPath": "config/example-mod-config.yaml"
                 }
             ],
@@ -62,13 +64,17 @@ An example of the structure of the modpack JSON configuration file:
     ],
     "installation": [
         {
+            // The source path is relative to current directory
             "sourcePath": "all-my-configs/my-custom-config.yaml",
+            // The destination path is absolute
             "destinationPath": "~/configs/config.yaml"
         }
     ],
     "devInstallation": [
         {
+            // The source path is relative to current directory
             "sourcePath": "all-my-configs/my-custom-config.yaml",
+            // The destination path is absolute
             "destinationPath": "~/configs/config.yaml"
         }
     ]
