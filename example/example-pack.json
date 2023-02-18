@@ -1,0 +1,38 @@
+{
+    "name": "Our cool modpack",
+    "version": "1.12.2",
+    "api": {
+        "name": "modding-api-name-1.12.2-1.0.0",
+        "resourceUrl": "https://some.download.server.xyz/compiled",
+        "sourceUrl": "https://some.download.server.xyz/source",
+        "checksum": ""
+    },
+    "mods": [
+        {
+            "name": "Mod name",
+            "includeClient": true,
+            "includeServer": true,
+            "resourceUrl": "https://some.download.server.xyz/compiled",
+            "sourceUrl": "https://some.download.server.xyz/source",
+            "configFiles": [
+                {
+                    "sourcePath": "local-directory/some-mod-directory/config.yaml",
+                    "destinationPath": "some-mod-directory/config.yaml"
+                }
+            ],
+            "checksum": ""
+        }
+    ],
+    "installation": [
+        {
+            "sourcePath": "localconfig/optifine-config.yaml",
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ],
+    "devInstallation": [
+        {
+            "sourcePath": "localconfig/optifine-config.yaml",
+            "destinationPath": "modpack-build-dir/optifine/config.yaml"
+        }
+    ]
+}
